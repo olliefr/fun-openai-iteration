@@ -1,16 +1,30 @@
 import base64
+import os
 import sys
+from pathlib import Path
 from openai import OpenAI
 
-if len(sys.argv) not in [2, 3]:
-    print(f"usage: {sys.argv[0]} k [n]\nWhere k>=0 is the step to start from, n (optional) number of steps to make.")
+if len(sys.argv) != 3:
+    print(f"usage: {sys.argv[0]} n input_file\nWhere n>=1 is number of steps to make,\ninput_file is the input image file name.")
     sys.exit(1)
-k = int(sys.argv[1])
-n = 1
-if len(sys.argv) == 3:
-    n = int(sys.argv[2])
-assert k >= 0
+
+n = int(sys.argv[1])
 assert n >= 1
+
+p = Path(sys.argv[2])
+assert p.is_file()
+assert p.suffix in [".jpg", ".png"]
+assert len(p.stem) >= 3 # "i-0"
+assert "-" in p.stem
+
+parts = p.stem.split("-")
+fname = parts[0]
+k = int(parts[1]) # starting number
+w = len(parts[1]) # field width (1, 01, 001)
+
+# sys.exit(0)
+
+assert "OPENAI_API_KEY" in os.environ
 
 client = OpenAI()
 
@@ -22,7 +36,7 @@ while n > 0:
     result = client.images.edit(
         model="gpt-image-1",
         image=[
-            open(f"oliver/oliver-{k}.jpg", "rb"),
+            p.with_stem(f"{fname}-{k:0{w}}").open("rb")
         ],
         prompt=prompt,
         quality='high',
@@ -32,7 +46,7 @@ while n > 0:
     image_base64 = result.data[0].b64_json
     image_bytes = base64.b64decode(image_base64)
 
-    with open(f"oliver/oliver-{k+1}.jpg", "wb") as f:
+    with p.with_stem(f"{fname}-{k+1:0{w}}").open("wb") as f:
         f.write(image_bytes)
     
     k += 1
