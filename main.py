@@ -22,6 +22,7 @@ fname = parts[0]
 k = int(parts[1]) # starting number
 w = len(parts[1]) # field width (1, 01, 001)
 
+# print(p.suffix[1:])
 # sys.exit(0)
 
 assert "OPENAI_API_KEY" in os.environ
@@ -39,7 +40,7 @@ while n > 0:
             p.with_stem(f"{fname}-{k:0{w}}").open("rb")
         ],
         prompt=prompt,
-        quality='high',
+        quality='low',
         size='1024x1024',
     )
 
